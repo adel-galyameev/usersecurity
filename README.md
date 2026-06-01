@@ -2,39 +2,39 @@
 
 Сервис управления пользователями с JWT-аутентификацией.
 
-## Установка
+### Предварительные требования
 
-### 1. Установка nginx-ingress controller
+- Minikube запущен
+- установлен  nginx через helm (как описано в Базовые сущности Kubernetes: Service, Ingress // ДЗ)
 
-```bash
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
-helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx --create-namespace
-```
 
-### 2. Установка приложения
+### Запуск helm чарта (выполнять в корне репозитория)
 
 ```bash
-helm install usersecurity ./usersecurity -n usersecurity --create-namespace
+helm install usersecurity ./usersecurity
 ```
 
-### 3. Настройка arch.homework
+**Ожидаемый ответ:**
 
 ```bash
-# Получить IP ingress-а
-kubectl get svc -n ingress-nginx ingress-nginx-controller
-
-# Добавить в /etc/hosts (или использовать minikube ip / kind)
-echo "<IP> arch.homework" | sudo tee -a /etc/hosts
+NAME: usersecurity
+LAST DEPLOYED: Mon May  4 12:37:17 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
 ```
 
-### 4. Проверка, что всё запустилось
+### Остановка helm чарта
 
 ```bash
-kubectl get pods -n usersecurity -w
+helm uninstall usersecurity
 ```
 
-Дождаться статуса `Running` для обоих подов (PostgreSQL и приложение).
+**Ожидаемый ответ:**
+
+```bash
+release "usersecurity" uninstalled
+```
 
 ## API
 
@@ -45,19 +45,12 @@ kubectl get pods -n usersecurity -w
 | GET | `/api/users/{id}` | Получить профиль | Bearer token |
 | PATCH | `/api/users/{id}` | Обновить профиль | Bearer token |
 
-## Запуск тестов
-
-### Установка newman
-
-```bash
-npm install -g newman
-```
 
 ### Запуск
 
 ```bash
-newman run usersecurity.postman_collection.json \
-  --env-var "baseUrl=http://arch.homework" \
+newman run UserSecurity_API_Tests.postman_collection.json \
+  --env-var "baseUrl=http://arch.homework"  \
   --reporters cli \
   --verbose
 ```
