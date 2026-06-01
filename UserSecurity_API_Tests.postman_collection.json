@@ -1,0 +1,580 @@
+{
+	"info": {
+		"_postman_id": "87496497-582e-49fd-8b9c-28399c7c595f",
+		"name": "UserSecurity API Tests",
+		"description": "Тесты для сервиса usersecurity\n\nСценарий:\n1. Регистрация пользователя 1\n2. Проверка, что изменение и получение профиля недоступно без логина\n3. Вход пользователя 1\n4. Изменение профиля пользователя 1\n5. Проверка, что профиль поменялся\n6. Регистрация пользователя 2\n7. Вход пользователя 2\n8. Проверка, что пользователь2 не имеет доступа на чтение и редактирование профиля пользователя1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25339338",
+		"_collection_link": "https://sbbol0.postman.co/workspace/sbbol~27cd9015-f91c-4308-8b6b-e8c558b29306/collection/25339338-87496497-582e-49fd-8b9c-28399c7c595f?action=share&source=collection_link&creator=25339338"
+	},
+	"item": [
+		{
+			"name": "1. Регистрация пользователя 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test(\"Response has id\", () => pm.expect(body).to.have.property('id'));",
+							"pm.collectionVariables.set('user1_id', body.id);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function randomString(len) {",
+							"  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';",
+							"  let result = '';",
+							"  for (let i = 0; i < len; i++) result += chars[Math.floor(Math.random() * chars.length)];",
+							"  return result;",
+							"}",
+							"",
+							"const r1 = randomString(8);",
+							"",
+							"pm.collectionVariables.set('user1_username', 'user_' + r1);",
+							"pm.collectionVariables.set('user1_email', 'user_' + r1 + '@test.com');",
+							"pm.collectionVariables.set('user1_password', 'pass_' + r1);",
+							"pm.collectionVariables.set('user1_firstName', 'FirstName_' + r1);",
+							"pm.collectionVariables.set('user1_lastName', 'LastName_' + r1);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{user1_username}}\",\n    \"email\": \"{{user1_email}}\",\n    \"password\": \"{{user1_password}}\",\n    \"firstName\": \"{{user1_firstName}}\",\n    \"lastName\": \"{{user1_lastName}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/registration",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"registration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. GET профиля без токена (ожидается 403)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{user1_id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{user1_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. PATCH профиля без токена (ожидается 403)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstName\": \"test\",\n    \"lastName\": \"test\",\n    \"email\": \"test@test.com\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{user1_id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{user1_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Вход пользователя 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test(\"Response has token\", () => pm.expect(body).to.have.property('token'));",
+							"pm.collectionVariables.set('user1_token', body.token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{user1_username}}\",\n    \"password\": \"{{user1_password}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Изменение профиля пользователя 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test(\"First name updated\", () => pm.expect(body.firstName).to.eql(pm.collectionVariables.get('user1_firstName_updated')));",
+							"pm.test(\"Last name updated\", () => pm.expect(body.lastName).to.eql(pm.collectionVariables.get('user1_lastName_updated')));",
+							"pm.test(\"Email updated\", () => pm.expect(body.email).to.eql(pm.collectionVariables.get('user1_email_updated')));"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function randomString(len) {",
+							"  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';",
+							"  let result = '';",
+							"  for (let i = 0; i < len; i++) result += chars[Math.floor(Math.random() * chars.length)];",
+							"  return result;",
+							"}",
+							"",
+							"const r1 = randomString(8);",
+							"",
+							"pm.collectionVariables.set('user1_firstName_updated', 'UpdatedFirstName_' + r1);",
+							"pm.collectionVariables.set('user1_lastName_updated', 'UpdatedLastName_' + r1);",
+							"pm.collectionVariables.set('user1_email_updated', 'updated_' + r1 + '@test.com');"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{user1_token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstName\": \"{{user1_firstName_updated}}\",\n    \"lastName\": \"{{user1_lastName_updated}}\",\n    \"email\": \"{{user1_email_updated}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{user1_id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{user1_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6. Проверка изменений профиля",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test(\"First name is correct\", () => pm.expect(body.firstName).to.eql(pm.collectionVariables.get('user1_firstName_updated')));",
+							"pm.test(\"Last name is correct\", () => pm.expect(body.lastName).to.eql(pm.collectionVariables.get('user1_lastName_updated')));",
+							"pm.test(\"Email is correct\", () => pm.expect(body.email).to.eql(pm.collectionVariables.get('user1_email_updated')));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{user1_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{user1_id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{user1_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "7. Регистрация пользователя 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"function randomString(len) {",
+							"  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';",
+							"  let result = '';",
+							"  for (let i = 0; i < len; i++) result += chars[Math.floor(Math.random() * chars.length)];",
+							"  return result;",
+							"}",
+							"",
+							"const r2 = randomString(8);",
+							"",
+							"pm.collectionVariables.set('user2_username', 'user_' + r2);",
+							"pm.collectionVariables.set('user2_email', 'user_' + r2 + '@test.com');",
+							"pm.collectionVariables.set('user2_password', 'pass_' + r2);",
+							"pm.collectionVariables.set('user2_firstName', 'FirstName_' + r2);",
+							"pm.collectionVariables.set('user2_lastName', 'LastName_' + r2);",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{user2_username}}\",\n    \"email\": \"{{user2_email}}\",\n    \"password\": \"{{user2_password}}\",\n    \"firstName\": \"{{user2_firstName}}\",\n    \"lastName\": \"{{user2_lastName}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/registration",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"registration"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "8. Вход пользователя 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test(\"Response has token\", () => pm.expect(body).to.have.property('token'));",
+							"pm.collectionVariables.set('user2_token', body.token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"{{user2_username}}\",\n    \"password\": \"{{user2_password}}\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/auth/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "9. Пользователь 2 читает профиль пользователя 1 (ожидается 403)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{user2_token}}"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{user1_id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{user1_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10. Пользователь 2 редактирует профиль пользователя 1 (ожидается 403)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status is 403\", () => pm.response.to.have.status(403));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{user2_token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"firstName\": \"Hacked\",\n    \"lastName\": \"Hacked\",\n    \"email\": \"hacked@hack.com\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{user1_id}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{user1_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://arch.homework"
+		},
+		{
+			"key": "user1_username",
+			"value": ""
+		},
+		{
+			"key": "user1_email",
+			"value": ""
+		},
+		{
+			"key": "user1_password",
+			"value": ""
+		},
+		{
+			"key": "user1_firstName",
+			"value": ""
+		},
+		{
+			"key": "user1_lastName",
+			"value": ""
+		},
+		{
+			"key": "user1_firstName_updated",
+			"value": ""
+		},
+		{
+			"key": "user1_lastName_updated",
+			"value": ""
+		},
+		{
+			"key": "user1_email_updated",
+			"value": ""
+		},
+		{
+			"key": "user2_username",
+			"value": ""
+		},
+		{
+			"key": "user2_email",
+			"value": ""
+		},
+		{
+			"key": "user2_password",
+			"value": ""
+		},
+		{
+			"key": "user2_firstName",
+			"value": ""
+		},
+		{
+			"key": "user2_lastName",
+			"value": ""
+		},
+		{
+			"key": "user1_id",
+			"value": ""
+		},
+		{
+			"key": "user1_token",
+			"value": ""
+		},
+		{
+			"key": "user2_token",
+			"value": ""
+		}
+	]
+}

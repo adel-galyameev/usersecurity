@@ -1,0 +1,65 @@
+deployment:
+  replicaCount: 1
+  containerPort: 8080
+  image:
+    repository: adelgalyameev/usersecurity
+    pullPolicy: IfNotPresent
+    tag: 0.1
+
+podAnnotations: {}
+podLabels: {}
+
+nameOverride: "usersecuriry"
+fullnameOverride: "usersecurity"
+
+config:
+  dbHostPort: postgresql-db-service.default.svc.cluster.local
+  username: user
+  showSql: true
+
+secret:
+  dbPassword: dXNlclBhc3N3b3Jk
+
+configDb:
+  username: user
+  db: user
+
+statefulSet:
+  name: postgresql-db
+  replicas: 1
+  containerPort: 5432
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: 13.3
+  resources:
+   limits:
+     cpu: 800m
+     memory: 2000Mi
+   requests:
+     cpu: 800m
+     memory: 1500Mi
+
+
+resources:
+  limits:
+    cpu: 800m
+    memory: 700Mi
+  requests:
+    cpu: 500m
+    memory: 500Mi
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  name: nginx-ingress-root
+  className: nginx
+  annotations:
+    # nginx.ingress.kubernetes.io/rewrite-target: /
+  hosts:
+    - host: arch.homework
+      paths:
+        - path: /
+          pathType: Prefix

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "usersecurity.name" . }}-service
+  labels:
+    {{- include "usersecurity.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.deployment.containerPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "usersecurity.selectorLabels" . | nindent 4 }}
